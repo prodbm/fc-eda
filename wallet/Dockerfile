@@ -1,7 +1,13 @@
-FROM golang:1.20
+FROM golang:latest as build
 
-WORKDIR /app/
+WORKDIR /build
+COPY . .
+RUN go build -o app ./cmd/walletcore/...
+ 
+FROM alpine:latest as run
 
-RUN apt-get update && apt-get install -y librdkafka-dev
-
-CMD ["tail", "-f", "/dev/null"]
+RUN apk add libc6-compat
+WORKDIR /app
+COPY --from=build /build/app .
+EXPOSE 8080
+ENTRYPOINT ["/app/app"]
